@@ -57,6 +57,7 @@ pub fn uncorrupted_mul_sum(input: &str) -> usize {
         .sum()
 }
 
+/// Computes the answer to part 2.
 pub fn enabled_mul_sum(input: &str) -> usize {
     Token::lexer(input)
         .filter_map(Result::ok)
