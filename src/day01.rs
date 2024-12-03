@@ -92,6 +92,8 @@ mod tests {
             3   3
             "#;
 
+    const INPUT: &str = include_str!("../input/day01.txt");
+
     #[test]
     fn example_part1() {
         let data: Data = EXAMPLE.parse().unwrap();
@@ -106,15 +108,13 @@ mod tests {
 
     #[test]
     fn part_1() {
-        let source = std::fs::read_to_string("input/day01.txt").unwrap();
-        let data: Data = source.parse().unwrap();
+        let data: Data = INPUT.parse().unwrap();
         assert_eq!(data.total_difference(), 1320851);
     }
 
     #[test]
     fn part_2() {
-        let source = std::fs::read_to_string("input/day01.txt").unwrap();
-        let data: Data = source.parse().unwrap();
+        let data: Data = INPUT.parse().unwrap();
         assert_eq!(data.similarity_score(), 26859182);
     }
 }
