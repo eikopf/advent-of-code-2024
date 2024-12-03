@@ -18,6 +18,10 @@ impl From<std::num::ParseIntError> for LexError {
 pub enum Token {
     #[regex(r#"mul\([0-9]+\,[0-9]+\)"#, process_mul)]
     Mul((usize, usize)),
+    #[token(r#"do()"#)]
+    Do,
+    #[token(r#"don't()"#)]
+    Dont,
     #[regex(".")]
     Junk,
 }
@@ -53,23 +57,49 @@ pub fn uncorrupted_mul_sum(input: &str) -> usize {
         .sum()
 }
 
+pub fn enabled_mul_sum(input: &str) -> usize {
+    Token::lexer(input)
+        .filter_map(Result::ok)
+        .fold((true, 0usize), |(state, total), next| match next {
+            Token::Mul((lhs, rhs)) if state => (state, total + (lhs * rhs)),
+            Token::Do => (true, total),
+            Token::Dont => (false, total),
+            _ => (state, total),
+        })
+        .1
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    const EXAMPLE: &str = r#"
+    const EXAMPLE_PART1: &str = r#"
         xmul(2,4)%&mul[3,7]!@^do_not_mul(5,5)+mul(32,64]then(mul(11,8)mul(8,5))
             "#;
+
+    const EXAMPLE_PART2: &str = r#"
+        xmul(2,4)&mul[3,7]!^don't()_mul(5,5)+mul(32,64](mul(11,8)undo()?mul(8,5))
+        "#;
 
     const INPUT: &str = include_str!("../input/day03.txt");
 
     #[test]
     fn example_part1() {
-        assert_eq!(uncorrupted_mul_sum(EXAMPLE), 161);
+        assert_eq!(uncorrupted_mul_sum(EXAMPLE_PART1), 161);
     }
 
     #[test]
     fn part1() {
         assert_eq!(uncorrupted_mul_sum(INPUT), 170068701);
+    }
+
+    #[test]
+    fn example_part2() {
+        assert_eq!(enabled_mul_sum(EXAMPLE_PART2), 48);
+    }
+
+    #[test]
+    fn part2() {
+        assert_eq!(enabled_mul_sum(INPUT), 78683433);
     }
 }
