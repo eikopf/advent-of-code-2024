@@ -95,13 +95,13 @@ mod tests {
     const INPUT: &str = include_str!("../input/day01.txt");
 
     #[test]
-    fn example_part1() {
+    fn example_part_1() {
         let data: Data = EXAMPLE.parse().unwrap();
         assert_eq!(data.total_difference(), 11);
     }
 
     #[test]
-    fn example_part2() {
+    fn example_part_2() {
         let data: Data = EXAMPLE.parse().unwrap();
         assert_eq!(data.similarity_score(), 31);
     }

@@ -169,22 +169,22 @@ mod tests {
     const INPUT: &str = include_str!("../input/day02.txt");
 
     #[test]
-    fn example_part1() {
+    fn example_part_1() {
         assert_eq!(count_safe_reports(EXAMPLE), 2);
     }
 
     #[test]
-    fn part1() {
+    fn part_1() {
         assert_eq!(count_safe_reports(INPUT), 591);
     }
 
     #[test]
-    fn example_part2() {
+    fn example_part_2() {
         assert_eq!(count_safe_dampened_reports(EXAMPLE), 4);
     }
 
     #[test]
-    fn part2() {
+    fn part_2() {
         assert_eq!(count_safe_dampened_reports(INPUT), 621);
     }
 }

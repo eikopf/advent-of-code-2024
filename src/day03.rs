@@ -84,22 +84,22 @@ mod tests {
     const INPUT: &str = include_str!("../input/day03.txt");
 
     #[test]
-    fn example_part1() {
+    fn example_part_1() {
         assert_eq!(uncorrupted_mul_sum(EXAMPLE_PART1), 161);
     }
 
     #[test]
-    fn part1() {
+    fn part_1() {
         assert_eq!(uncorrupted_mul_sum(INPUT), 170068701);
     }
 
     #[test]
-    fn example_part2() {
+    fn example_part_2() {
         assert_eq!(enabled_mul_sum(EXAMPLE_PART2), 48);
     }
 
     #[test]
-    fn part2() {
+    fn part_2() {
         assert_eq!(enabled_mul_sum(INPUT), 78683433);
     }
 }
