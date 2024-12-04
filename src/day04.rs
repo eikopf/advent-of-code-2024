@@ -61,6 +61,7 @@ impl XmasGrid {
             .filter_map(move |(n, elem)| Some(n).filter(|_| *elem == token))
     }
 
+    /// Counts the number of `XMAS` sequences in `self` that begin at `index`.
     pub fn count_xmas_sequences_at_index(&self, index: usize) -> usize {
         let nrows: isize = self.grid.nrows().try_into().unwrap();
 
@@ -106,7 +107,34 @@ impl XmasGrid {
         total
     }
 
+    /// Checks whether `index` is the `A` in an overlapping pair of `MAS` sequences.
+    pub fn mas_cross_occurs_at(&self, index: usize) -> bool {
+        let nrows = self.grid.nrows();
+        let ncols = self.grid.ncols();
+
+        // if `index` is in the first or last column
+        if index < nrows || index + nrows >= ncols * nrows {
+            return false;
+        }
+
+        // if `index` is in the first or last row
+        if index % nrows == 0 || index % nrows == nrows - 1 {
+            return false;
+        }
+
+        // get adjacent diagonals
+        let nw = self.grid[index - nrows - 1];
+        let ne = self.grid[index + nrows - 1];
+        let sw = self.grid[index - nrows + 1];
+        let se = self.grid[index + nrows + 1];
+
+        let aligned = |a, b| (a == Xmas::M && b == Xmas::S) || (a == Xmas::S && b == Xmas::M);
+
+        aligned(nw, se) && aligned(ne, sw)
+    }
+
     /// Computes the Chebyshev distance between `a` and `b` on `self`.
+    #[inline(always)]
     pub fn chebyshev(&self, a: usize, b: usize) -> usize {
         let (row_a, col_a) = self.index_to_position(a);
         let (row_b, col_b) = self.index_to_position(b);
@@ -127,6 +155,14 @@ pub fn count_xmas_occurrences(input: &str) -> usize {
     grid.iter_positions_of(Xmas::X)
         .map(|index| grid.count_xmas_sequences_at_index(index))
         .sum()
+}
+
+/// Computes the solution to part 2.
+pub fn count_x_mas_occurrences(input: &str) -> usize {
+    let grid = input.parse::<XmasGrid>().unwrap();
+    grid.iter_positions_of(Xmas::A)
+        .filter(|&index| grid.mas_cross_occurs_at(index))
+        .count()
 }
 
 #[cfg(test)]
@@ -154,5 +190,15 @@ mod tests {
     #[test]
     fn part_1() {
         assert_eq!(count_xmas_occurrences(INPUT), 2514);
+    }
+
+    #[test]
+    fn example_part_2() {
+        assert_eq!(count_x_mas_occurrences(EXAMPLE), 9);
+    }
+
+    #[test]
+    fn part_2() {
+        assert_eq!(count_x_mas_occurrences(INPUT), 1888);
     }
 }
