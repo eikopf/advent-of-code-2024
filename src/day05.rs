@@ -1,4 +1,5 @@
 use std::{
+    cmp::Ordering,
     collections::{HashMap, HashSet},
     str::FromStr,
 };
@@ -96,6 +97,42 @@ pub fn sum_of_middle_page_numbers(input: &str) -> usize {
         .sum()
 }
 
+/// Computes the solution to part 2.
+pub fn sum_of_malformed_middle_page_numbers(input: &str) -> usize {
+    let (rules, updates) = input.split_once("\n\n").unwrap();
+    let rules = rules.parse::<RuleTable>().unwrap();
+
+    let updates = updates.split_terminator("\n").map(|raw_update| {
+        raw_update
+            .split(',')
+            .map(u8::from_str)
+            .map(Result::unwrap)
+            .collect::<Vec<_>>()
+    });
+
+    let mut sum = 0;
+
+    for mut update in updates {
+        if update.is_sorted_by(|&a, &b| rules.check_order(a, b)) {
+            continue;
+        }
+
+        update.sort_by(|&a, &b| {
+            if a == b {
+                Ordering::Equal
+            } else if rules.check_order(a, b) {
+                Ordering::Greater
+            } else {
+                Ordering::Less
+            }
+        });
+
+        sum += update[update.len() / 2] as usize;
+    }
+
+    sum
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -139,5 +176,15 @@ mod tests {
     #[test]
     fn part_1() {
         assert_eq!(sum_of_middle_page_numbers(INPUT), 6242);
+    }
+
+    #[test]
+    fn example_part_2() {
+        assert_eq!(sum_of_malformed_middle_page_numbers(EXAMPLE), 123);
+    }
+
+    #[test]
+    fn part_2() {
+        assert_eq!(sum_of_malformed_middle_page_numbers(INPUT), 5169);
     }
 }
