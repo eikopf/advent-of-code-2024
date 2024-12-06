@@ -215,15 +215,28 @@ pub fn count_possible_loops(input: &str) -> usize {
     const FUEL: usize = 6000;
     let area = input.parse::<Area>().unwrap();
 
-    // rayon drops the processing time in the full input case from ~5s to 0.65s
+    // obstructions have to be placed on the guard's path, so we grab them first
+    // to reduce the number of permutations that actually need to be checked
+    let positions = {
+        let mut set = HashSet::new();
+        let mut area = area.clone();
+
+        loop {
+            set.insert(area.guard.index);
+
+            if area.next_state().is_leave() {
+                break;
+            }
+        }
+
+        set
+    };
+
+    // rayon drops the processing time in the full input case from ~5s to 0.16s
     // on my 2021 macbook pro
-    (0..area.map.len())
+    positions
         .into_par_iter()
         .map_with(area, |area, i| {
-            if area.map[i] == Position::Obstructed {
-                return false;
-            }
-
             let mut area = area.clone();
             area.map[i] = Position::Obstructed;
 
