@@ -1,6 +1,7 @@
 use std::{collections::HashSet, str::FromStr};
 
 use nalgebra as na;
+use rayon::iter::{IntoParallelIterator, ParallelIterator as _};
 
 #[derive(Debug, Clone)]
 pub struct Area {
@@ -190,6 +191,7 @@ impl Direction {
     }
 }
 
+/// Computes the solution to part 1.
 pub fn count_distinct_patrol_positions(input: &str) -> usize {
     let mut area = input.parse::<Area>().unwrap();
     let mut positions = HashSet::new();
@@ -203,6 +205,40 @@ pub fn count_distinct_patrol_positions(input: &str) -> usize {
     }
 
     positions.len()
+}
+
+/// Computes the solution to part 2.
+pub fn count_possible_loops(input: &str) -> usize {
+    // brute force because i kinda hate this problem
+
+    // roughly the lowest fuel value that produces a valid answer
+    const FUEL: usize = 6000;
+    let area = input.parse::<Area>().unwrap();
+
+    // rayon drops the processing time in the full input case from ~5s to 0.65s
+    // on my 2021 macbook pro
+    (0..area.map.len())
+        .into_par_iter()
+        .map_with(area, |area, i| {
+            if area.map[i] == Position::Obstructed {
+                return false;
+            }
+
+            let mut area = area.clone();
+            area.map[i] = Position::Obstructed;
+
+            let mut not_a_loop = false;
+            for _ in 0..FUEL {
+                if area.next_state().is_leave() {
+                    not_a_loop = true;
+                    break;
+                }
+            }
+
+            !not_a_loop
+        })
+        .filter(|&x| x)
+        .count()
 }
 
 #[cfg(test)]
@@ -230,5 +266,15 @@ mod tests {
     #[test]
     fn part_1() {
         assert_eq!(count_distinct_patrol_positions(INPUT), 5030);
+    }
+
+    #[test]
+    fn example_part_2() {
+        assert_eq!(count_possible_loops(EXAMPLE), 6);
+    }
+
+    #[test]
+    fn part_2() {
+        assert_eq!(count_possible_loops(INPUT), 1928);
     }
 }
