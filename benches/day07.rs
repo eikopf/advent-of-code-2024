@@ -1,5 +1,6 @@
 use aoc_2024::day07::total_calibration_result as part_1;
 use aoc_2024::day07::total_calibration_result_with_concatenation as part_2;
+
 use criterion::{criterion_group, criterion_main, Criterion};
 
 const INPUT: &str = include_str!("../input/day07.txt");
@@ -20,5 +21,6 @@ pub fn part_2_benchmark(c: &mut Criterion) {
     });
 }
 
-criterion_group!(day07, part_1_benchmark, part_2_benchmark);
+criterion_group!(day07, part_1_benchmark, part_2_benchmark,);
+
 criterion_main!(day07);

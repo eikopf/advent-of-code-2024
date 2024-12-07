@@ -1,3 +1,5 @@
+use rayon::{iter::ParallelIterator, str::ParallelString};
+
 const OPERAND_BUFFER_CAPACITY: usize = 16;
 
 #[derive(Debug, Clone, Copy)]
@@ -69,6 +71,7 @@ impl<'a> EqnRef<'a> {
         }
     }
 
+    #[inline(always)]
     fn is_solvable_by_concat(self, operand: u16) -> bool {
         let operand = operand as usize;
 
@@ -80,6 +83,7 @@ impl<'a> EqnRef<'a> {
             .is_solvable_with_concatenation()
     }
 
+    #[inline(always)]
     fn is_solvable_by_mul(self, operand: u16) -> bool {
         let operand = operand as usize;
 
@@ -91,6 +95,7 @@ impl<'a> EqnRef<'a> {
             .is_solvable_with_concatenation()
     }
 
+    #[inline(always)]
     fn is_solvable_by_add(self, operand: u16) -> bool {
         let operand = operand as usize;
 
@@ -104,16 +109,19 @@ impl<'a> EqnRef<'a> {
 }
 
 /// Returns `true` if `rhs` is a digitwise suffix of `rhs`.
+#[inline(always)]
 fn suffixed(lhs: usize, rhs: usize) -> bool {
     lhs >= rhs && divides(lhs - rhs, 10usize.pow(1 + rhs.ilog10()))
 }
 
 /// Strips the `rhs` suffix from `lhs`.
+#[inline(always)]
 fn unconcat(lhs: usize, rhs: usize) -> usize {
     lhs / 10usize.pow(1 + rhs.ilog10())
 }
 
 /// Returns `true` iff `rhs` is a factor of `lhs`.
+#[inline(always)]
 fn divides(lhs: usize, rhs: usize) -> bool {
     let quot = (lhs as f64) / (rhs as f64);
     quot.floor() == quot
@@ -134,19 +142,21 @@ pub fn total_calibration_result(input: &str) -> usize {
     sum
 }
 
-/// Computes the solution to part 1.
+/// Computes the solution to part 2.
 pub fn total_calibration_result_with_concatenation(input: &str) -> usize {
-    let mut source = input;
-    let mut buf = Vec::with_capacity(OPERAND_BUFFER_CAPACITY);
+    input
+        .par_split_terminator('\n')
+        .map(|mut s| {
+            let mut buf = Vec::with_capacity(OPERAND_BUFFER_CAPACITY / 8);
+            let eqn = EqnRef::parse_next(&mut s, &mut buf).unwrap();
 
-    let mut sum = 0;
-    while let Some(eqn) = EqnRef::parse_next(&mut source, &mut buf) {
-        if eqn.is_solvable_with_concatenation() {
-            sum += eqn.value;
-        }
-    }
-
-    sum
+            if eqn.is_solvable_with_concatenation() {
+                eqn.value
+            } else {
+                0
+            }
+        })
+        .sum()
 }
 
 #[cfg(test)]
