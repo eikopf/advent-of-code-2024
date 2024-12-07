@@ -64,8 +64,8 @@ impl<'a> EqnRef<'a> {
             [] => panic!("ran into an equation with no operands"),
             [x] => (*x as usize) == self.value,
             [args @ .., x] => {
-                Self { args, ..self }.is_solvable_by_add(*x)
-                    || Self { args, ..self }.is_solvable_by_mul(*x)
+                Self { args, ..self }.is_solvable_by_mul(*x)
+                    || Self { args, ..self }.is_solvable_by_add(*x)
                     || Self { args, ..self }.is_solvable_by_concat(*x)
             }
         }
