@@ -3,7 +3,7 @@ const OPERAND_BUFFER_CAPACITY: usize = 16;
 #[derive(Debug, Clone, Copy)]
 pub struct EqnRef<'a> {
     value: usize,
-    operands: &'a [u16],
+    args: &'a [u16],
 }
 
 impl<'a> EqnRef<'a> {
@@ -27,37 +27,90 @@ impl<'a> EqnRef<'a> {
         buf.clear();
         buf.extend(operands);
 
-        Some(EqnRef {
-            value,
-            operands: buf,
-        })
+        Some(EqnRef { value, args: buf })
     }
 
+    /// Computes for *just* part 1.
     pub fn is_solvable(&self) -> bool {
-        match self.operands {
+        match self.args {
             [] => panic!("ran into an equation with no operands"),
             [x] => (*x as usize) == self.value,
             // we recurse from right-to-left because the equations are
             // _evaluated_ from left-to-right; this is effectively undoing
             // the operands one-by-one
-            [operands @ .., x] => {
+            [args @ .., x] => {
                 let x = *x as usize;
 
                 x <= self.value
                     && (EqnRef {
                         value: self.value - x,
-                        operands,
+                        args,
                     }
                     .is_solvable()
                         || divides(self.value, x)
                             && EqnRef {
                                 value: self.value / x,
-                                operands,
+                                args,
                             }
                             .is_solvable())
             }
         }
     }
+
+    pub fn is_solvable_with_concatenation(self) -> bool {
+        match self.args {
+            [] => panic!("ran into an equation with no operands"),
+            [x] => (*x as usize) == self.value,
+            [args @ .., x] => {
+                Self { args, ..self }.is_solvable_by_add(*x)
+                    || Self { args, ..self }.is_solvable_by_mul(*x)
+                    || Self { args, ..self }.is_solvable_by_concat(*x)
+            }
+        }
+    }
+
+    fn is_solvable_by_concat(self, operand: u16) -> bool {
+        let operand = operand as usize;
+
+        suffixed(self.value, operand)
+            && EqnRef {
+                value: unconcat(self.value, operand),
+                ..self
+            }
+            .is_solvable_with_concatenation()
+    }
+
+    fn is_solvable_by_mul(self, operand: u16) -> bool {
+        let operand = operand as usize;
+
+        divides(self.value, operand)
+            && EqnRef {
+                value: self.value / operand,
+                ..self
+            }
+            .is_solvable_with_concatenation()
+    }
+
+    fn is_solvable_by_add(self, operand: u16) -> bool {
+        let operand = operand as usize;
+
+        operand <= self.value
+            && EqnRef {
+                value: self.value - operand,
+                ..self
+            }
+            .is_solvable_with_concatenation()
+    }
+}
+
+/// Returns `true` if `rhs` is a digitwise suffix of `rhs`.
+fn suffixed(lhs: usize, rhs: usize) -> bool {
+    lhs >= rhs && divides(lhs - rhs, 10usize.pow(1 + rhs.ilog10()))
+}
+
+/// Strips the `rhs` suffix from `lhs`.
+fn unconcat(lhs: usize, rhs: usize) -> usize {
+    lhs / 10usize.pow(1 + rhs.ilog10())
 }
 
 /// Returns `true` iff `rhs` is a factor of `lhs`.
@@ -74,6 +127,21 @@ pub fn total_calibration_result(input: &str) -> usize {
     let mut sum = 0;
     while let Some(eqn) = EqnRef::parse_next(&mut source, &mut buf) {
         if eqn.is_solvable() {
+            sum += eqn.value;
+        }
+    }
+
+    sum
+}
+
+/// Computes the solution to part 1.
+pub fn total_calibration_result_with_concatenation(input: &str) -> usize {
+    let mut source = input;
+    let mut buf = Vec::with_capacity(OPERAND_BUFFER_CAPACITY);
+
+    let mut sum = 0;
+    while let Some(eqn) = EqnRef::parse_next(&mut source, &mut buf) {
+        if eqn.is_solvable_with_concatenation() {
             sum += eqn.value;
         }
     }
@@ -105,5 +173,18 @@ mod tests {
     #[test]
     fn part_1() {
         assert_eq!(total_calibration_result(INPUT), 538191549061);
+    }
+
+    #[test]
+    fn example_part_2() {
+        assert_eq!(total_calibration_result_with_concatenation(EXAMPLE), 11387);
+    }
+
+    #[test]
+    fn part_2() {
+        assert_eq!(
+            total_calibration_result_with_concatenation(INPUT),
+            34612812972206
+        );
     }
 }
